@@ -1,0 +1,22 @@
+{
+  "author": "Paul Vorbach <paul@vorb.de> (http://vorb.de)",
+  "name": "seek",
+  "description": "search through a bunch of files",
+  "tags": [ "search", "files", "file search" ],
+  "version": "0.0.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/pvorb/node-seek.git"
+  },
+  "bugs": {
+    "web": "https://github.com/pvorb/node-seek/issues"
+  },
+  "main": "seek.js",
+  "engines": {
+    "node": ">=0.4.0"
+  },
+  "dependencies": {
+    "append": ">=0.1.0",
+    "dive": ">=0.0.4"
+  }
+}
