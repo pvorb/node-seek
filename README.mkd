@@ -6,50 +6,50 @@ website does only consist of static files.
 seek(directory, query, options, found[, filter]);
 ```
 
-* `directory` is the pathname of a readable directory.
-* `query` is either a string consisting of the keywords to search for or an
-  array of strings and regular expressions.
-* `options` is an object that redefines some of the default properties.
+*   `directory` is the pathname of a readable directory.
+*   `query` is either a string consisting of the keywords to search for or an
+    array of strings and regular expressions.
+*   `options` is an object that redefines some of the default properties.
 
-  The default options are as follows:
+    The default options are as follows:
 
-  ```javascript
-  {
-    recursive: true,      // - Recursive file walking. If set to false,
-                          // subdirectories of directory will be ignored.
-    caseSensitive: false, // - Case insensitive search
-    dotFiles: true,       // - Don't ignore "dot files" like '.gitignore'
-    requireAll: true,     // - Require to find all keywords so that a file is
-                          // matched.
-    findAll: false,       // - Only the first occurrence of a keyword is
-                          // matched. Set this to true, if you want to match all
-                          // occurrences of a keyword in the file.
-    ignoreOrder: true,    // - Ignore the order of the keywords. Use with care!
-                          // Only works with findAll set to false.
-    separator: ' '        // - String, which separates the keywords query if
-                          // query is a string.
-  }
-  ```
-* `found` is passed two arguments `(file, matches)` where `file` is the pathname
-  of the file that has been found and `matches` is an array. The array may
-  contain objects or arrays. The objects are returned when you search for
-  strings. They look something like this:
+    ```javascript
+    {
+      recursive: true,      // - Recursive file walking. If set to false,
+                            // subdirectories of directory will be ignored.
+      caseSensitive: false, // - Case insensitive search
+      dotFiles: true,       // - Don't ignore "dot files" like '.gitignore'
+      requireAll: true,     // - Require to find all keywords so that a file is
+                            // matched.
+      findAll: false,       // - Only the first occurrence of a keyword is
+                            // matched. Set this to true, if you want to match
+                            // all occurrences of a keyword in the file.
+      ignoreOrder: true,    // - Ignore the order of the keywords. Use with
+                            // care! Only works with findAll set to false.
+      separator: ' '        // - String, which separates the keywords query if
+                            // query is a string.
+    }
+    ```
+*   `found` is passed two arguments `(file, matches)` where `file` is the
+    pathname of the file that has been found and `matches` is an array. The
+    array may contain objects or arrays. The objects are returned when you
+    search for strings. They look something like this:
 
-  ```javascript
-  {
-    keyword: 'foo', // - the keyword that has been found
-    firstIndex: 43, // - the index of the first character of the keyword in the
-                    // file
-    lastIndex: 45,  // - the index of the last character of the keyword in the
-                    // file
-  }
-  ```
+    ```javascript
+    {
+      keyword: 'foo', // - the keyword that has been found
+      firstIndex: 43, // - the index of the first character of the keyword in
+                      // the file
+      lastIndex: 45,  // - the index of the last character of the keyword in the
+                      // file
+    }
+    ```
 
-  The arrays look like the regular results of a regular expression match. They
-  only occur when `query` is an array and contains a regular expression.
-* `filter [optional]` is passed one argument `(file)`. You may filter files out
-  by providing a condition in this file. A file is left out, if `filter`
-  returns `false`.
+    The arrays look like the regular results of a regular expression match. They
+    only occur when `query` is an array and contains a regular expression.
+*   `filter [optional]` is passed one argument `(file)`. You may filter files
+    out by providing a condition in this file. A file is left out, if `filter`
+    returns `false`.
 
 ## Installation
 
