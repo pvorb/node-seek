@@ -3,7 +3,7 @@ directory. It's perfect for providing a search form on your website if the
 website does only consist of static files.
 
 ```javascript
-seek(directory, query, options, found[, filter]);
+seek(directory, query, options, found[, filter[, complete]]);
 ```
 
 *   `directory` is the pathname of a readable directory.
