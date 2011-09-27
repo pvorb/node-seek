@@ -3,7 +3,7 @@ var append = require('append'),
     fs = require('fs'),
     seek;
 
-seek = function(dir, query, opt, found, filter) {
+seek = function(dir, query, opt, found, filter, complete) {
   var optDefault, scan, checkOrder, i;
 
   // If `filter` is not defined, use a filter that always returns `true`
@@ -152,7 +152,7 @@ seek = function(dir, query, opt, found, filter) {
       if (matches = scan(file, fileContents, offset))
         found(file, matches);
     });
-  });
+  }, complete);
 };
 
 module.exports = seek;

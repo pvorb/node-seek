@@ -53,6 +53,8 @@ seek(directory, query, options, found[, filter]);
 *   `filter [optional]` is passed one argument `(file)`. You may filter files
     out by providing a condition in this file. A file is left out, if `filter`
     returns `false`.
+*   `complete [optional]` is passed no arguments. This callback is called, when
+    the search is over.
 
 ## Installation
 
