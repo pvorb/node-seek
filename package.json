@@ -3,7 +3,7 @@
   "name": "seek",
   "description": "search through a bunch of files",
   "tags": [ "search", "files", "file search" ],
-  "version": "0.0.0",
+  "version": "0.1.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/pvorb/node-seek.git"

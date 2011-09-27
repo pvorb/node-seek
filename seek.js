@@ -19,8 +19,9 @@ seek = function(dir, query, opt, found, filter) {
                           // matched.
     findAll: false,       // Only the first occurrence of a keyword is matched
     ignoreOrder: true,    // Ignore the order of the keywords
-    separator: ' '        // String, which separates the keywords in query if
+    separator: ' ',       // String, which separates the keywords in query if
                           // query is a string.
+    bufferSize: 1024 * 64 // Size of the ReadStream buffer.
   };
 
   // Override default settings
@@ -44,7 +45,7 @@ seek = function(dir, query, opt, found, filter) {
   };
 
   // Scan the file's `data` with `query`
-  scan = function(file, data) {
+  scan = function(file, data, offset) {
     var required, i, j, fromIndex, matches, match, firstIndex, lastIndex;
 
     // If the file must contain all keywords
@@ -64,15 +65,15 @@ seek = function(dir, query, opt, found, filter) {
 
       // If keyword is a string
       if (typeof query[i] == 'string') {
-        // If all occurrences of a keyword shall be found
         // While query is found
         while ((firstIndex = data.indexOf(query[i], fromIndex)) != -1) {
           lastIndex = firstIndex + query[i].length - 1;
 
+          // result object with offset
           match = {
             keyword: query[i],
-            firstIndex: firstIndex,
-            lastIndex: lastIndex
+            firstIndex: offset + firstIndex,
+            lastIndex: offset + lastIndex
           };
 
           // If the order is important, check, if the new match is not in the
@@ -97,8 +98,12 @@ seek = function(dir, query, opt, found, filter) {
           fromIndex = lastIndex;
         }
       }
-      // If pattern matched data
+      // If keyword is a RegExp and the pattern matched data
       else if (match = data.match(query[i])) {
+
+        //Apply offset
+        match.index += offset;
+
         // Add to matches
         matches.push(match);
 
@@ -123,14 +128,28 @@ seek = function(dir, query, opt, found, filter) {
     // If a file is filtered out, return
     if (!filter(file)) return;
 
-    // Open the file
-    fs.readFile(file, 'utf-8', function(err, data) {
-      if (err) throw err;
+    var bufSize = opt.bufferSize,
+        offset = 0,
+        fileContents = '',
+
+    // Create a ReadStream for the current file
+    readStream = fs.createReadStream(file, {
+      encoding: 'utf-8',
+      bufferSize: bufSize
+    }).on('data', function(chunk) {
+      // When the chunk has the size of the buffer and fileContents is bigger
+      // than 2 * bufSize, remove the first buffer from the file contents to
+      // prevent too large file objects.
+      if (chunk.length == bufSize && fileContents.length > bufSize) {
+        fileContents = fileContents.slice(bufSize);
+        offset += bufSize;
+      }
+
+      fileContents += chunk;
 
       var matches;
-
-      // Scan the file and return
-      if (matches = scan(file, data))
+      // Scan the file and call found if something has been found.
+      if (matches = scan(file, fileContents, offset))
         found(file, matches);
     });
   });

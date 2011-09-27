@@ -16,18 +16,21 @@ seek(directory, query, options, found[, filter]);
     ```javascript
     {
       recursive: true,      // - Recursive file walking. If set to false,
-                            // subdirectories of directory will be ignored.
+                            //   subdirectories of directory will be ignored.
       caseSensitive: false, // - Case insensitive search
       dotFiles: true,       // - Don't ignore "dot files" like '.gitignore'
       requireAll: true,     // - Require to find all keywords so that a file is
-                            // matched.
+                            //   matched.
       findAll: false,       // - Only the first occurrence of a keyword is
-                            // matched. Set this to true, if you want to match
-                            // all occurrences of a keyword in the file.
+                            //   matched. Set this to true, if you want to match
+                            //   all occurrences of a keyword in the file.
       ignoreOrder: true,    // - Ignore the order of the keywords. Use with
-                            // care! Only works with findAll set to false.
-      separator: ' '        // - String, which separates the keywords query if
-                            // query is a string.
+                            //   care! Only works with findAll set to false.
+      separator: ' ',       // - String, which separates the keywords query if
+                            //   query is a string.
+      bufferSize: 64 * 1024 // - The buffer size used (twice) for a file.
+                            //   Decrease this value for a smaller memory
+                            //   footprint when you are seeking for large files.
     }
     ```
 *   `found` is passed two arguments `(file, matches)` where `file` is the
@@ -39,9 +42,9 @@ seek(directory, query, options, found[, filter]);
     {
       keyword: 'foo', // - the keyword that has been found
       firstIndex: 43, // - the index of the first character of the keyword in
-                      // the file
+                      //   the file
       lastIndex: 45,  // - the index of the last character of the keyword in the
-                      // file
+                      //   file
     }
     ```
 
