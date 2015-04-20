@@ -1,14 +1,35 @@
 var append = require('append'),
     dive = require('dive'),
-    fs = require('fs'),
+    fs = require('graceful-fs'),
     seek;
+
 
 seek = function(dir, query, opt, found, filter, complete) {
   var optDefault, scan, checkOrder, i;
+  if(!opt.events) {
+    opt.events = {};
+  }
+  if(found) {
+    opt.events.found = found;
+  }
+  if(filter) {
+    opt.filter = filter;
+  }
+  if(complete) {
+    opt.events.complete = complete;
+  }
+
 
   // If `filter` is not defined, use a filter that always returns `true`
-  if (typeof filter == 'undefined')
-    filter = function(file) { return true; };
+  if (typeof opt.filter == 'undefined')
+    opt.filter = function(file) { return true; };
+  if (typeof opt.events.error == 'undefined')
+    opt.events.error = function() {};
+  if (typeof opt.events.found == 'undefined')
+    opt.events.found = function() {};
+  if (typeof opt.events.complete == 'undefined')
+    opt.events.complete = function() {};
+
 
   // Default options
   optDefault = {
@@ -123,17 +144,19 @@ seek = function(dir, query, opt, found, filter, complete) {
   };
 
   dive(dir, { all: opt.dotFiles }, function(err, file) {
-    if (err) throw err;
+    if (err) {
+      return opt.events.error(err);
+    }
 
     // If a file is filtered out, return
-    if (!filter(file)) return;
+    if (!opt.filter(file)) return;
 
     var bufSize = opt.bufferSize,
         offset = 0,
-        fileContents = '',
+        fileContents = '';
 
     // Create a ReadStream for the current file
-    readStream = fs.createReadStream(file, {
+    var readStream = fs.createReadStream(file, {
       encoding: 'utf-8',
       bufferSize: bufSize
     }).on('data', function(chunk) {
@@ -147,12 +170,17 @@ seek = function(dir, query, opt, found, filter, complete) {
 
       fileContents += chunk;
 
-      var matches;
-      // Scan the file and call found if something has been found.
-      if (matches = scan(file, fileContents, offset))
-        found(file, matches);
+      // Allow user to whitelist files, even if there are no matches
+      var override = opt.events.scanned && opt.events.scanned(file);
+
+      // Scan the file 
+      var matches = scan(file, fileContents, offset);
+
+      if (matches || override)
+        opt.events.found(file, matches, override);
     });
-  }, complete);
+
+  }, opt.events.complete);
 };
 
 module.exports = seek;
