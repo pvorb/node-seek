@@ -4,8 +4,10 @@ var append = require('append'),
     seek;
 
 
-seek = function(dir, query, opt, found, filter, complete) {
+seek = function(path, query, opt, found, filter, complete) {
   var optDefault, scan, checkOrder, i;
+  if(!opt) opt = {};
+
   if(!opt.events) {
     opt.events = {};
   }
@@ -142,18 +144,21 @@ seek = function(dir, query, opt, found, filter, complete) {
     // zero. Otherwise return false.
     return (matches.length > 0 && required <= 0) ? matches : false;
   };
-
-  dive(dir, { all: opt.dotFiles }, function(err, file) {
+  
+  function readFileStream(err, file, done) {
     if (err) {
-      return opt.events.error(err);
+      opt.events.error(err);
+      return done ? done() : false;
     }
 
     // If a file is filtered out, return
-    if (!opt.filter(file)) return;
+    if (!opt.filter(file)) return done ? done() : false;
 
     var bufSize = opt.bufferSize,
         offset = 0,
-        fileContents = '';
+        fileContents = '',
+        matches = [],
+        chunkMatches;
 
     // Create a ReadStream for the current file
     var readStream = fs.createReadStream(file, {
@@ -170,17 +175,37 @@ seek = function(dir, query, opt, found, filter, complete) {
 
       fileContents += chunk;
 
-      // Allow user to whitelist files, even if there are no matches
-      var override = opt.events.scanned && opt.events.scanned(file);
+      // Scan the file, add matches
+      chunkMatches = scan(file, fileContents, offset);
+      if(chunkMatches)
+        matches = matches.concat(chunkMatches);
 
-      // Scan the file 
-      var matches = scan(file, fileContents, offset);
-
-      if (matches || override)
-        opt.events.found(file, matches, override);
     });
+    readStream.on('error', function(err) {
+      opt.events.error(err);
+      return done ? done() : false;
+    });
+    readStream.on('end', function() {
+       // Allow user to whitelist files, even if there are no matches
+      var override = opt.events.scanned && opt.events.scanned(file);
+      if (matches.length > 0 || override)
+        opt.events.found(file, matches, override);
+      
+      done && done();
+    });
+  }
 
-  }, opt.events.complete);
+  if(Array.isArray(path)) {
+    var numPaths = path.length;
+    path.forEach(function(val) {
+      readFileStream(null, val, function() { 
+        numPaths--;
+        if(numPaths === 0)
+          opt.events.complete();
+      });
+    });
+  }
+  else dive(path, { all: opt.dotFiles }, readFileStream, opt.events.complete);
 };
 
 module.exports = seek;
