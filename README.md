@@ -88,5 +88,4 @@ If you encounter any bugs or issues, feel free to open an issue at
 
 ## License
 
-This package is licensed under the
-[MIT license](http://vorb.de/license/mit.html).
+MIT License

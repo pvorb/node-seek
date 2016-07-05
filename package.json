@@ -1,5 +1,8 @@
 {
-  "author": "Paul Vorbach <paul@vorb.de> (http://vorb.de)",
+  "author": "Paul Vorbach <paul@vorba.ch> (http://vorba.ch)",
+  "contributors": [
+    "Matthew Dean"
+  ],
   "name": "seek",
   "description": "search through a bunch of files",
   "tags": [
