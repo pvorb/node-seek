@@ -1,14 +1,37 @@
 var append = require('append'),
     dive = require('dive'),
-    fs = require('fs'),
+    fs = require('graceful-fs'),
     seek;
 
-seek = function(dir, query, opt, found, filter, complete) {
+
+seek = function(path, query, opt, found, filter, complete) {
   var optDefault, scan, checkOrder, i;
+  if(!opt) opt = {};
+
+  if(!opt.events) {
+    opt.events = {};
+  }
+  if(found) {
+    opt.events.found = found;
+  }
+  if(filter) {
+    opt.filter = filter;
+  }
+  if(complete) {
+    opt.events.complete = complete;
+  }
+
 
   // If `filter` is not defined, use a filter that always returns `true`
-  if (typeof filter == 'undefined')
-    filter = function(file) { return true; };
+  if (typeof opt.filter == 'undefined')
+    opt.filter = function(file) { return true; };
+  if (typeof opt.events.error == 'undefined')
+    opt.events.error = function() {};
+  if (typeof opt.events.found == 'undefined')
+    opt.events.found = function() {};
+  if (typeof opt.events.complete == 'undefined')
+    opt.events.complete = function() {};
+
 
   // Default options
   optDefault = {
@@ -121,19 +144,24 @@ seek = function(dir, query, opt, found, filter, complete) {
     // zero. Otherwise return false.
     return (matches.length > 0 && required <= 0) ? matches : false;
   };
-
-  dive(dir, { all: opt.dotFiles }, function(err, file) {
-    if (err) throw err;
+  
+  function readFileStream(err, file, done) {
+    if (err) {
+      opt.events.error(err);
+      return done ? done() : false;
+    }
 
     // If a file is filtered out, return
-    if (!filter(file)) return;
+    if (!opt.filter(file)) return done ? done() : false;
 
     var bufSize = opt.bufferSize,
         offset = 0,
         fileContents = '',
+        matches = [],
+        chunkMatches;
 
     // Create a ReadStream for the current file
-    readStream = fs.createReadStream(file, {
+    var readStream = fs.createReadStream(file, {
       encoding: 'utf-8',
       bufferSize: bufSize
     }).on('data', function(chunk) {
@@ -147,12 +175,37 @@ seek = function(dir, query, opt, found, filter, complete) {
 
       fileContents += chunk;
 
-      var matches;
-      // Scan the file and call found if something has been found.
-      if (matches = scan(file, fileContents, offset))
-        found(file, matches);
+      // Scan the file, add matches
+      chunkMatches = scan(file, fileContents, offset);
+      if(chunkMatches)
+        matches = matches.concat(chunkMatches);
+
     });
-  }, complete);
+    readStream.on('error', function(err) {
+      opt.events.error(err);
+      return done ? done() : false;
+    });
+    readStream.on('end', function() {
+       // Allow user to whitelist files, even if there are no matches
+      var override = opt.events.scanned && opt.events.scanned(file);
+      if (matches.length > 0 || override)
+        opt.events.found(file, matches, override);
+      
+      done && done();
+    });
+  }
+
+  if(Array.isArray(path)) {
+    var numPaths = path.length;
+    path.forEach(function(val) {
+      readFileStream(null, val, function() { 
+        numPaths--;
+        if(numPaths === 0)
+          opt.events.complete();
+      });
+    });
+  }
+  else dive(path, { all: opt.dotFiles }, readFileStream, opt.events.complete);
 };
 
 module.exports = seek;
