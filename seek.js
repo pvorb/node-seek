@@ -146,7 +146,8 @@ seek = function(path, query, opt, found, filter, complete) {
   };
   
   function readFileStream(err, file, done) {
-    if (!done) done = function() { return false };
+    if (!done || typeof done !== 'function') 
+      done = function() { return false };
 
     if (err) {
       opt.events.error(err);
