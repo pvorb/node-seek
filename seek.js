@@ -146,13 +146,17 @@ seek = function(path, query, opt, found, filter, complete) {
   };
   
   function readFileStream(err, file, done) {
+    if (!done || typeof done !== 'function') 
+      done = function() { return false };
+
     if (err) {
       opt.events.error(err);
-      return done ? done() : false;
+      return done();
     }
 
     // If a file is filtered out, return
-    if (!opt.filter(file)) return done ? done() : false;
+
+    if (!opt.filter(file)) return done();
 
     var bufSize = opt.bufferSize,
         offset = 0,
@@ -183,7 +187,7 @@ seek = function(path, query, opt, found, filter, complete) {
     });
     readStream.on('error', function(err) {
       opt.events.error(err);
-      return done ? done() : false;
+      return done();
     });
     readStream.on('end', function() {
        // Allow user to whitelist files, even if there are no matches
@@ -191,7 +195,7 @@ seek = function(path, query, opt, found, filter, complete) {
       if (matches.length > 0 || override)
         opt.events.found(file, matches, override);
       
-      done && done();
+      done();
     });
   }
 
